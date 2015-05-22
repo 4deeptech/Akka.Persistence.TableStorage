@@ -7,8 +7,8 @@
     <ProjectGuid>{984AE8C0-9881-4BB2-A3B4-764A08D12633}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Akka.Persistence.TableStorage</RootNamespace>
-    <AssemblyName>Akka.Persistence.TableStorage</AssemblyName>
+    <RootNamespace>Akka.Persistence.Azure</RootNamespace>
+    <AssemblyName>Akka.Persistence.Azure</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -87,8 +87,9 @@
     <Compile Include="GuidUtility.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="TableStorageExtension.cs" />
-    <Compile Include="TableStorageInitializer.cs" />
+    <Compile Include="AzureStorageInitializer.cs" />
     <Compile Include="TableStorageJournal.cs" />
+    <Compile Include="BlobStorageSnapshotStore.cs" />
     <Compile Include="TableStorageSnapshotStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -98,7 +99,7 @@
     <None Include="protos\google\protobuf\csharp_options.proto" />
     <None Include="protos\google\protobuf\descriptor.proto" />
     <None Include="protos\tutorial\addressbook.proto" />
-    <EmbeddedResource Include="table-storage.conf" />
+    <EmbeddedResource Include="azure-storage.conf" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="CHANGES.txt" />

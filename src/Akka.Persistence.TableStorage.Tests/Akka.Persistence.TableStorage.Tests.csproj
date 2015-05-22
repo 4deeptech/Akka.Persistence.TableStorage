@@ -99,7 +99,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlobStorageCleanup.cs" />
     <Compile Include="TableStorageCleanup.cs" />
+    <Compile Include="BlobStorageSnapshotSpec.cs" />
     <Compile Include="TableStorageSnapshotSpec.cs" />
     <Compile Include="TableStorageJournalSpec.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,4 +1,5 @@
 ﻿using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;
@@ -6,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Akka.Persistence.TableStorage
+namespace Akka.Persistence.Azure
 {
-    internal static class TableStorageInitializer
+    internal static class AzureStorageInitializer
     {
         /// <summary>
         /// Initializes journal tables according 'table-name' 
@@ -34,11 +35,32 @@ namespace Akka.Persistence.TableStorage
             }
         }
 
+        /// <summary>
+        /// Initializes snapshot store related containers to 'container-name' 
+        /// values provided in 'akka.persistence.snapshot-store.blob-storage' config.
+        /// </summary>
+        internal static void CreateSnapshotStoreContainer(IEnumerable<string> storageAccountConnectionStrings, string containerName)
+        {
+            foreach (string connectionString in storageAccountConnectionStrings)
+            {
+                CreateContainer(connectionString, containerName);
+            }
+        }
+
         internal static void CreateTable(string connectionString,string tableName)
         {
             CloudTableClient tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
             CloudTable table = tableClient.GetTableReference(tableName);
             table.CreateIfNotExists();
         }
+
+        internal static void CreateContainer(string connectionString, string containerName)
+        {
+            CloudBlobClient blobClient = CloudStorageAccount.Parse(connectionString).CreateCloudBlobClient();
+            CloudBlobContainer container = blobClient.GetContainerReference(containerName);
+            container.CreateIfNotExists();
+        }
     }
+
+
 }

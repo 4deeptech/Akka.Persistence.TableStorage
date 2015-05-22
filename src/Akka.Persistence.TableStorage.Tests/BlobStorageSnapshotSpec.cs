@@ -8,15 +8,13 @@ using Akka.TestKit;
 using Akka.Persistence;
 using Akka.Persistence.Journal;
 using Xunit;
-using Akka.Persistence.TestKit.Journal;
+using Akka.Persistence.TestKit.Snapshot;
 using Akka.Configuration;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
 
 
 namespace Akka.Persistence.TableStorage.Tests
 {
-    public partial class TableStorageJournalSpec : JournalSpec
+    public partial class BlobStorageSnapshotSpec : SnapshotStoreSpec
     {
         private static readonly Config SpecConfig = ConfigurationFactory.ParseString(@"
             akka {
@@ -25,14 +23,14 @@ namespace Akka.Persistence.TableStorage.Tests
                 loggers = [""Akka.Logger.NLog.NLogLogger,Akka.Logger.NLog""]
 
                 persistence {
-
                 publish-plugin-commands = on
-                journal {
-                    plugin = ""akka.persistence.journal.table-storage""
-                    table-storage {
-                        class = ""TableStorage.Persistence.TableStorageJournal, Akka.Persistence.Azure""
+                snapshot-store {
+                    plugin = ""akka.persistence.snapshot-store.blob-storage""
+                    blob-storage {
+                        class = ""BlobStorage.Persistence.BlobStorageSnapshotStore, Akka.Persistence.Azure""
                         plugin-dispatcher = ""akka.actor.default-dispatcher""
-                        table-name = events
+                        stream-dispatcher = ""akka.persistence.dispatchers.default-stream-dispatcher""
+                        container-name = snapshots
                         auto-initialize = on
                         connection-strings = [""UseDevelopmentStorage=true"",
                                   ""UseDevelopmentStorage=true"",
@@ -53,9 +51,11 @@ namespace Akka.Persistence.TableStorage.Tests
                     }
                 }
             }
-        }
+        }    
         ");
-        public TableStorageJournalSpec() : base(SpecConfig,"TableStorageJournalSpec") 
+
+        public BlobStorageSnapshotSpec()
+            : base(SpecConfig, "BlobStorageSnapshotSpec")
         {
             Initialize();
         }
@@ -64,8 +64,10 @@ namespace Akka.Persistence.TableStorage.Tests
         {
             base.Dispose(disposing);
             //cleanup
-            TableStorageCleanup.Clean(SpecConfig.GetString("akka.persistence.journal.table-storage.table-name"),
-                SpecConfig.GetStringList("akka.persistence.journal.table-storage.connection-strings"));
+            BlobStorageCleanup.Clean(SpecConfig.GetString("akka.persistence.snapshot-store.blob-storage.container-name"),
+                SpecConfig.GetStringList("akka.persistence.snapshot-store.blob-storage.connection-strings"));
         }
     }
+
+     
 }

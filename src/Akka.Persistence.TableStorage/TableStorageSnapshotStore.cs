@@ -13,7 +13,7 @@ using Akka.Persistence.Snapshot;
 using Akka.Serialization;
 using Newtonsoft.Json;
 using Microsoft.WindowsAzure.Storage.Table;
-using Akka.Persistence.TableStorage;
+using Akka.Persistence.Azure;
 
 namespace TableStorage.Persistence
 {
@@ -21,11 +21,11 @@ namespace TableStorage.Persistence
     {
         private ILoggingAdapter _log;
         private JsonSerializerSettings _settings;
-        private readonly TableStoragePersistenceExtension _extension;
+        private readonly AzureStoragePersistenceExtension _extension;
 
         public TableStorageSnapshotStore()
         {
-            _extension = TableStoragePersistence.Instance.Apply(Context.System);
+            _extension = AzureStoragePersistence.Instance.Apply(Context.System);
             _log = Context.GetLogger();
             _settings = new JsonSerializerSettings();
             _settings.TypeNameHandling = TypeNameHandling.All;
@@ -33,8 +33,8 @@ namespace TableStorage.Persistence
                
         protected override async Task<SelectedSnapshot> LoadAsync(string persistenceId, SnapshotSelectionCriteria criteria)
         {
-            CloudTableClient tableClient = _extension.SnapshotStoreSettings.GetClient(persistenceId);
-            CloudTable table = tableClient.GetTableReference(_extension.SnapshotStoreSettings.TableName);
+            CloudTableClient tableClient = _extension.TableSnapshotStoreSettings.GetClient(persistenceId);
+            CloudTable table = tableClient.GetTableReference(_extension.TableSnapshotStoreSettings.TableName);
             
             TableQuery<Snapshot> query =
                         new TableQuery<Snapshot>().Where(
@@ -60,11 +60,11 @@ namespace TableStorage.Persistence
 
         protected override async Task SaveAsync(SnapshotMetadata metadata, object snapshot)
         {
-            var snapData = new Snapshot(Guid.NewGuid(), metadata.PersistenceId, typeof(Snapshot).Name, (int)metadata.SequenceNr, new SelectedSnapshot(metadata, snapshot));
+            var snapData = new Snapshot(Guid.NewGuid(), metadata.PersistenceId, typeof(Snapshot).Name, metadata.SequenceNr, new SelectedSnapshot(metadata, snapshot));
             try
             {
-                CloudTableClient tableClient = _extension.SnapshotStoreSettings.GetClient(metadata.PersistenceId);
-                CloudTable table = tableClient.GetTableReference(_extension.SnapshotStoreSettings.TableName);
+                CloudTableClient tableClient = _extension.TableSnapshotStoreSettings.GetClient(metadata.PersistenceId);
+                CloudTable table = tableClient.GetTableReference(_extension.TableSnapshotStoreSettings.TableName);
                 TableOperation insertOperation = TableOperation.Insert(snapData);
                 TableResult result = await table.ExecuteAsync(insertOperation);
             }
@@ -81,8 +81,8 @@ namespace TableStorage.Persistence
         {
             try
             {
-                CloudTableClient tableClient = _extension.SnapshotStoreSettings.GetClient(metadata.PersistenceId);
-                CloudTable table = tableClient.GetTableReference(_extension.SnapshotStoreSettings.TableName);
+                CloudTableClient tableClient = _extension.TableSnapshotStoreSettings.GetClient(metadata.PersistenceId);
+                CloudTable table = tableClient.GetTableReference(_extension.TableSnapshotStoreSettings.TableName);
                 TableOperation getOperation = TableOperation.Retrieve<Snapshot>(metadata.PersistenceId, Snapshot.ToRowKey(metadata.SequenceNr));
                 TableResult result = table.Execute(getOperation);
                 TableOperation deleteOperation = TableOperation.Delete((Snapshot)result.Result);
@@ -98,8 +98,8 @@ namespace TableStorage.Persistence
         {
             try
             {
-                CloudTableClient tableClient = _extension.SnapshotStoreSettings.GetClient(persistenceId);
-                CloudTable table = tableClient.GetTableReference(_extension.SnapshotStoreSettings.TableName);
+                CloudTableClient tableClient = _extension.TableSnapshotStoreSettings.GetClient(persistenceId);
+                CloudTable table = tableClient.GetTableReference(_extension.TableSnapshotStoreSettings.TableName);
                 TableQuery<Snapshot> query =
                         new TableQuery<Snapshot>().Where(
                         TableQuery.CombineFilters(

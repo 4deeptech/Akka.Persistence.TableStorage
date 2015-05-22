@@ -1,5 +1,6 @@
 ﻿using Akka.Configuration;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;
@@ -7,13 +8,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Akka.Persistence.TableStorage
+namespace Akka.Persistence.Azure
 {
-    public class TableStorageSettings
+    public class AzureStorageSettings
     {
         private Dictionary<string, CloudStorageAccount> _storageAccounts;
 
-        public TableStorageSettings(IList<string> connectionStrings)
+        public AzureStorageSettings(IList<string> connectionStrings)
         {
             _storageAccounts = new Dictionary<string, CloudStorageAccount>();
             for(int i=0;i<connectionStrings.Count;i++)
@@ -31,9 +32,14 @@ namespace Akka.Persistence.TableStorage
             else return _storageAccounts["0"];
         }
 
-        public CloudTableClient GetClient(string id)
+        public CloudTableClient GetTableClient(string id)
         {
             return GetAccount(id.Substring(0, 1)).CreateCloudTableClient();
+        }
+
+        public CloudBlobClient GetBlobClient(string id)
+        {
+            return GetAccount(id.Substring(0, 1)).CreateCloudBlobClient();
         }
 
         public IEnumerable<CloudStorageAccount> GetStorageAccounts()
@@ -53,26 +59,26 @@ namespace Akka.Persistence.TableStorage
 
         public IList<string> ConnectionStrings = new List<string>();
 
-        private TableStorageSettings _settings = null;
+        private AzureStorageSettings _settings = null;
 
         public JournalSettings(Config config)
         {
             if (config == null) throw new ArgumentNullException("config", "Table Storage journal settings cannot be initialized, because required HOCON section couldn't be found");
             TableName = config.GetString("table-name");
             ConnectionStrings = config.GetStringList("connection-strings");
-            _settings = new TableStorageSettings(ConnectionStrings);
+            _settings = new AzureStorageSettings(ConnectionStrings);
         }
 
         public CloudTableClient GetClient(string id)
         {
-            return _settings.GetClient(id);
+            return _settings.GetTableClient(id);
         }
     }
 
     /// <summary>
     /// Configuration settings representation targeting Azure Table Storage snapshot store actor.
     /// </summary>
-    public class SnapshotStoreSettings
+    public class TableSnapshotStoreSettings
     {
         /// <summary>
         /// Name of the table corresponding to snapshot store.
@@ -81,19 +87,47 @@ namespace Akka.Persistence.TableStorage
 
         public IList<string> ConnectionStrings = new List<string>();
 
-        private TableStorageSettings _settings = null;
+        private AzureStorageSettings _settings = null;
 
-        public SnapshotStoreSettings(Config config)
+        public TableSnapshotStoreSettings(Config config)
         {
             if (config == null) throw new ArgumentNullException("config", "Azure Table Storage snapshot store settings cannot be initialized, because required HOCON section couldn't be found");
             TableName = config.GetString("table-name");
             ConnectionStrings = config.GetStringList("connection-strings");
-            _settings = new TableStorageSettings(ConnectionStrings);
+            _settings = new AzureStorageSettings(ConnectionStrings);
         }
 
         public CloudTableClient GetClient(string id)
         {
-            return _settings.GetClient(id);
+            return _settings.GetTableClient(id);
+        }
+    }
+
+    /// <summary>
+    /// Configuration settings representation targeting Azure Table Storage snapshot store actor.
+    /// </summary>
+    public class BlobSnapshotStoreSettings
+    {
+        /// <summary>
+        /// Name of the table corresponding to snapshot store.
+        /// </summary>
+        public string ContainerName { get; private set; }
+
+        public IList<string> ConnectionStrings = new List<string>();
+
+        private AzureStorageSettings _settings = null;
+
+        public BlobSnapshotStoreSettings(Config config)
+        {
+            if (config == null) throw new ArgumentNullException("config", "Azure Blob Storage snapshot store settings cannot be initialized, because required HOCON section couldn't be found");
+            ContainerName = config.GetString("container-name");
+            ConnectionStrings = config.GetStringList("connection-strings");
+            _settings = new AzureStorageSettings(ConnectionStrings);
+        }
+
+        public CloudBlobClient GetBlobClient(string id)
+        {
+            return _settings.GetBlobClient(id);
         }
     }
 }

@@ -27,7 +27,7 @@ namespace Akka.Persistence.TableStorage.Tests
                 snapshot-store {
                     plugin = ""akka.persistence.snapshot-store.table-storage""
                     table-storage {
-                        class = ""TableStorage.Persistence.TableStorageSnapshotStore, Akka.Persistence.TableStorage""
+                        class = ""TableStorage.Persistence.TableStorageSnapshotStore, Akka.Persistence.Azure""
                         plugin-dispatcher = ""akka.actor.default-dispatcher""
                         stream-dispatcher = ""akka.persistence.dispatchers.default-stream-dispatcher""
                         table-name = snapshots

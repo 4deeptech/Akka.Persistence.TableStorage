@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace Akka.Persistence.TableStorage
+namespace Akka.Persistence.Azure
 {
     public class TableStorageJournalSettings : JournalSettings
     {
@@ -25,7 +25,7 @@ namespace Akka.Persistence.TableStorage
         }
     }
 
-    public class TableStorageSnapshotSettings : SnapshotStoreSettings
+    public class TableStorageSnapshotSettings : TableSnapshotStoreSettings
     {
         public const string ConfigPath = "akka.persistence.snapshot-store.table-storage";
 
@@ -41,46 +41,73 @@ namespace Akka.Persistence.TableStorage
         }
     }
 
+    public class BlobStorageSnapshotSettings : BlobSnapshotStoreSettings
+    {
+        public const string ConfigPath = "akka.persistence.snapshot-store.blob-storage";
+
+        /// <summary>
+        /// Flag determining in case of snapshot store table missing, it should be automatically initialized.
+        /// </summary>
+        public bool AutoInitialize { get; private set; }
+
+        public BlobStorageSnapshotSettings(Config config)
+            : base(config)
+        {
+            AutoInitialize = config.GetBoolean("auto-initialize");
+        }
+    }
+
     /// <summary>
     /// An actor system extension initializing support for Table Storage persistence layer.
     /// </summary>
-    public class TableStoragePersistenceExtension : IExtension
+    public class AzureStoragePersistenceExtension : IExtension
     {
         /// <summary>
         /// Journal-related settings loaded from HOCON configuration.
         /// </summary>
-        public readonly TableStorageJournalSettings JournalSettings;
+        public readonly TableStorageJournalSettings TableJournalSettings;
 
         /// <summary>
         /// Snapshot store related settings loaded from HOCON configuration.
         /// </summary>
-        public readonly TableStorageSnapshotSettings SnapshotStoreSettings;
+        public readonly TableStorageSnapshotSettings TableSnapshotStoreSettings;
 
-        public TableStoragePersistenceExtension(ExtendedActorSystem system)
+        /// <summary>
+        /// Blob Storage Snapshot store related settings loaded from HOCON configuration.
+        /// </summary>
+        public readonly BlobStorageSnapshotSettings BlobSnapshotStoreSettings;
+
+        public AzureStoragePersistenceExtension(ExtendedActorSystem system)
         {
-            system.Settings.InjectTopLevelFallback(TableStoragePersistence.DefaultConfiguration());
+            system.Settings.InjectTopLevelFallback(AzureStoragePersistence.DefaultConfiguration());
 
-            JournalSettings = new TableStorageJournalSettings(system.Settings.Config.GetConfig(TableStorageJournalSettings.ConfigPath));
-            SnapshotStoreSettings = new TableStorageSnapshotSettings(system.Settings.Config.GetConfig(TableStorageSnapshotSettings.ConfigPath));
+            TableJournalSettings = new TableStorageJournalSettings(system.Settings.Config.GetConfig(TableStorageJournalSettings.ConfigPath));
+            TableSnapshotStoreSettings = new TableStorageSnapshotSettings(system.Settings.Config.GetConfig(TableStorageSnapshotSettings.ConfigPath));
+            BlobSnapshotStoreSettings = new BlobStorageSnapshotSettings(system.Settings.Config.GetConfig(BlobStorageSnapshotSettings.ConfigPath));
 
-            if (JournalSettings.AutoInitialize)
+            if (TableJournalSettings.AutoInitialize)
             {
-                TableStorageInitializer.CreateJournalTables(JournalSettings.ConnectionStrings, JournalSettings.TableName);
+                AzureStorageInitializer.CreateJournalTables(TableJournalSettings.ConnectionStrings, TableJournalSettings.TableName);
             }
 
-            if (SnapshotStoreSettings.AutoInitialize)
+            if (BlobSnapshotStoreSettings.AutoInitialize)
             {
-                TableStorageInitializer.CreateSnapshotStoreTables(SnapshotStoreSettings.ConnectionStrings, SnapshotStoreSettings.TableName);
+                AzureStorageInitializer.CreateSnapshotStoreContainer(BlobSnapshotStoreSettings.ConnectionStrings, BlobSnapshotStoreSettings.ContainerName);
+            }
+
+            if (TableSnapshotStoreSettings.AutoInitialize)
+            {
+                AzureStorageInitializer.CreateSnapshotStoreTables(TableSnapshotStoreSettings.ConnectionStrings, TableSnapshotStoreSettings.TableName);
             }
         }
     }
 
     /// <summary>
-    /// Singleton class used to setup Azure Table Storage backend for akka persistence plugin.
+    /// Singleton class used to setup Azure Storage backend for akka persistence plugin.
     /// </summary>
-    public class TableStoragePersistence : ExtensionIdProvider<TableStoragePersistenceExtension>
+    public class AzureStoragePersistence : ExtensionIdProvider<AzureStoragePersistenceExtension>
     {
-        public static readonly TableStoragePersistence Instance = new TableStoragePersistence();
+        public static readonly AzureStoragePersistence Instance = new AzureStoragePersistence();
 
         /// <summary>
         /// Initializes a Table Storage persistence plugin inside provided <paramref name="actorSystem"/>.
@@ -90,16 +117,16 @@ namespace Akka.Persistence.TableStorage
             Instance.Apply(actorSystem);
         }
 
-        private TableStoragePersistence() { }
+        private AzureStoragePersistence() { }
 
         /// <summary>
-        /// Creates an actor system extension for akka persistence Table Storage support.
+        /// Creates an actor system extension for akka persistence Azure Storage support.
         /// </summary>
         /// <param name="system"></param>
         /// <returns></returns>
-        public override TableStoragePersistenceExtension CreateExtension(ExtendedActorSystem system)
+        public override AzureStoragePersistenceExtension CreateExtension(ExtendedActorSystem system)
         {
-            return new TableStoragePersistenceExtension(system);
+            return new AzureStoragePersistenceExtension(system);
         }
 
         /// <summary>
@@ -108,7 +135,7 @@ namespace Akka.Persistence.TableStorage
         /// <returns></returns>
         public static Config DefaultConfiguration()
         {
-            return ConfigurationFactory.FromResource<TableStoragePersistence>("Akka.Persistence.TableStorage.table-storage.conf");
+            return ConfigurationFactory.FromResource<AzureStoragePersistence>("Akka.Persistence.Azure.azure-storage.conf");
         }
     }
 }

@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 using System.Configuration;
 using System.Threading;
 using Microsoft.WindowsAzure.Storage.Table;
-using Akka.Persistence.TableStorage;
+using Akka.Persistence.Azure;
 
 namespace TableStorage.Persistence
 {
@@ -22,12 +22,12 @@ namespace TableStorage.Persistence
     {
         private ILoggingAdapter _log;
         private JsonSerializerSettings _settings;
-        private readonly TableStoragePersistenceExtension _extension;
+        private readonly AzureStoragePersistenceExtension _extension;
 
         public TableStorageJournal()
         {
             _log = Context.GetLogger();
-            _extension = TableStoragePersistence.Instance.Apply(Context.System);
+            _extension = AzureStoragePersistence.Instance.Apply(Context.System);
             _settings = new JsonSerializerSettings();
             _settings.TypeNameHandling = TypeNameHandling.All;
         }
@@ -36,8 +36,8 @@ namespace TableStorage.Persistence
         {
             try
             {
-                CloudTableClient tableClient = _extension.JournalSettings.GetClient(persistenceId);
-                CloudTable table = tableClient.GetTableReference(_extension.JournalSettings.TableName);
+                CloudTableClient tableClient = _extension.TableJournalSettings.GetClient(persistenceId);
+                CloudTable table = tableClient.GetTableReference(_extension.TableJournalSettings.TableName);
                 TableQuery<Event> query =
                         new TableQuery<Event>().Where(
                         TableQuery.CombineFilters(
@@ -69,8 +69,8 @@ namespace TableStorage.Persistence
                 long count = 0;
                 if (max > 0 && (toSequenceNr - fromSequenceNr) >= 0)
                 {
-                    CloudTableClient tableClient = _extension.JournalSettings.GetClient(persistenceId);
-                    CloudTable table = tableClient.GetTableReference(_extension.JournalSettings.TableName);
+                    CloudTableClient tableClient = _extension.TableJournalSettings.GetClient(persistenceId);
+                    CloudTable table = tableClient.GetTableReference(_extension.TableJournalSettings.TableName);
                     TableQuery<Event> query =
                             new TableQuery<Event>().Where(
                                 TableQuery.CombineFilters(
@@ -121,8 +121,8 @@ namespace TableStorage.Persistence
                 });
                 try
                 {
-                    CloudTableClient tableClient = _extension.JournalSettings.GetClient(stream);
-                    CloudTable table = tableClient.GetTableReference(_extension.JournalSettings.TableName);
+                    CloudTableClient tableClient = _extension.TableJournalSettings.GetClient(stream);
+                    CloudTable table = tableClient.GetTableReference(_extension.TableJournalSettings.TableName);
                     TableBatchOperation batchOperation = new TableBatchOperation();
                     foreach(Event evt in events)
                     {
@@ -143,8 +143,8 @@ namespace TableStorage.Persistence
         {
             try
             {
-                CloudTableClient tableClient = _extension.JournalSettings.GetClient(persistenceId);
-                CloudTable table = tableClient.GetTableReference(_extension.JournalSettings.TableName);
+                CloudTableClient tableClient = _extension.TableJournalSettings.GetClient(persistenceId);
+                CloudTable table = tableClient.GetTableReference(_extension.TableJournalSettings.TableName);
                 TableQuery<Event> query =
                         new TableQuery<Event>().Where(
                         TableQuery.CombineFilters(

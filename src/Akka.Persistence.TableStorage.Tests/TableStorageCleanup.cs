@@ -1,4 +1,5 @@
-﻿using Microsoft.WindowsAzure.Storage;
+﻿using Akka.Persistence.Azure;
+using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;
@@ -12,8 +13,8 @@ namespace Akka.Persistence.TableStorage.Tests
     {
         public static void Clean(string tableName, IList<string> connectionStrings)
         {
-            TableStorageSettings settings =
-                new TableStorageSettings(connectionStrings);
+            AzureStorageSettings settings =
+                new AzureStorageSettings(connectionStrings);
             foreach (CloudStorageAccount conn in settings.GetStorageAccounts())
             {
                 CloudTableClient tableClient = conn.CreateCloudTableClient();
