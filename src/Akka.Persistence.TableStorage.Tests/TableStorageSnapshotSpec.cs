@@ -31,7 +31,7 @@ namespace Akka.Persistence.TableStorage.Tests
                         plugin-dispatcher = ""akka.actor.default-dispatcher""
                         stream-dispatcher = ""akka.persistence.dispatchers.default-stream-dispatcher""
                         table-name = snapshots
-                        auto-initialize = off
+                        auto-initialize = on
                         connection-strings = [""UseDevelopmentStorage=true"",
                                   ""UseDevelopmentStorage=true"",
 								  ""UseDevelopmentStorage=true"",

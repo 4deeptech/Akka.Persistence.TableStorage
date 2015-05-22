@@ -33,7 +33,7 @@ namespace Akka.Persistence.TableStorage.Tests
                         class = ""TableStorage.Persistence.TableStorageJournal, Akka.Persistence.TableStorage""
                         plugin-dispatcher = ""akka.actor.default-dispatcher""
                         table-name = events
-                        auto-initialize = off
+                        auto-initialize = on
                         connection-strings = [""UseDevelopmentStorage=true"",
                                   ""UseDevelopmentStorage=true"",
 								  ""UseDevelopmentStorage=true"",
