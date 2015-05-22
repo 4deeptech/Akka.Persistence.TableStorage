@@ -86,7 +86,6 @@
   <ItemGroup>
     <Compile Include="GuidUtility.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="ShardedTableHelper.cs" />
     <Compile Include="TableStorageExtension.cs" />
     <Compile Include="TableStorageInitializer.cs" />
     <Compile Include="TableStorageJournal.cs" />
