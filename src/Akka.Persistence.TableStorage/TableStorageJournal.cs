@@ -26,8 +26,8 @@ namespace TableStorage.Persistence
 
         public TableStorageJournal()
         {
-            _extension = TableStoragePersistence.Instance.Apply(Context.System);
             _log = Context.GetLogger();
+            _extension = TableStoragePersistence.Instance.Apply(Context.System);
             _settings = new JsonSerializerSettings();
             _settings.TypeNameHandling = TypeNameHandling.All;
         }
@@ -44,7 +44,7 @@ namespace TableStorage.Persistence
                                 TableQuery.GenerateFilterCondition("PartitionKey",
                                     QueryComparisons.Equal, persistenceId), TableOperators.And, 
                                     TableQuery.GenerateFilterCondition("RowKey",
-                                QueryComparisons.GreaterThanOrEqual, Event.ToRowKey((int)fromSequenceNr)))
+                                QueryComparisons.GreaterThanOrEqual, Event.ToRowKey(fromSequenceNr)))
                             );
                 IEnumerable<Event> results = table.ExecuteQuery(query);
                 
